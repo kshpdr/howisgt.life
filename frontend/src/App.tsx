@@ -3,10 +3,10 @@ import { Chart } from './components/Chart'
 import { Button } from '@/components/ui/button'
 import { FlipWords } from "@/components/ui/flip-words";
 import { PostTimeline } from '@/components/PostTimeline';
+import { Icons } from "@/components/Icons";
+import { HeroHighlightDemo } from '@/components/HeroHighlightDemo';
 
 function App() {
-  const words = ["Fun!", "Sad :(", "Indifferent...", "Excited!", "Busy :/"];
-
   // Mock data for posts
   const posts = [
     {
@@ -36,15 +36,21 @@ function App() {
           <span className="mr-2">🥵</span> howisgt.life
         </a>
         <div className="ml-auto flex w-full space-x-2 sm:justify-end">
-          <Button variant="outline">Source code</Button>
+          <Button asChild variant="outline" className="text-black hover:text-gray-700">
+            <a href="https://github.com/kshpdr/howisgt.life" target="_blank" rel="noopener noreferrer">
+              Source code
+              <Icons.gitHub className="h-4 w-4 mr-2" />
+            </a>
+          </Button>
         </div>
       </div>
-      <div className="flex justify-center items-center px-4">
+      {/* <div className="flex justify-center items-center px-4">
         <div className="text-3xl mx-auto font-normal text-neutral-600 dark:text-neutral-400">
           How is <span className="font-bold">Georgia Tech</span> life?
           <FlipWords words={words} /> <br />
         </div>
-      </div>
+      </div> */}
+      <HeroHighlightDemo />
       <Chart />
       <PostTimeline />
       {/* <div className="space-y-4">
