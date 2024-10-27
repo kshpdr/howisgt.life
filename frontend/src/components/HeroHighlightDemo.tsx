@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { HeroHighlight, Highlight } from "@/components/ui/hero-highlight";
 import { FlipWords } from "@/components/ui/flip-words";
 
-const words = ["Fun!", "Sad :(", "Indifferent...", "Excited!", "Busy :/"];
+const words = ["Fun!", "Sad :(", "Buzz.", "Indifferent...", "Exciting!", "Busy :/", "Annoying..."];
 
 export function HeroHighlightDemo() {
   return (

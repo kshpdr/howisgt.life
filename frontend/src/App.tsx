@@ -6,6 +6,7 @@ import { Icons } from "@/components/Icons";
 import { HeroHighlightDemo } from '@/components/HeroHighlightDemo';
 import { About } from '@/components/About';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { useState } from 'react';
 
 import {
   Select,
@@ -16,27 +17,28 @@ import {
 } from "@/components/ui/select";
 
 function App() {
+  const [moodScoreType, setMoodScoreType] = useState<'anthropic' | 'base'>('anthropic');
+
   return (
     <Router>
-      <div className="hidden h-full flex-col md:flex space-y-8">
+      <div className="h-full flex-col md:flex space-y-8">
         <div className="sticky top-0 container flex flex-col items-start justify-between space-y-2 py-4 sm:flex-row sm:items-center sm:space-y-0 md:h-16 bg-white z-10">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 space-x-0 sm:space-x-4">
             <Link to="/" className="text-2xl font-bold flex items-center text-black no-underline hover:text-gray-700">
               <span className="mr-2">🥵</span> howisgt.life
             </Link>
-            <Link to="/about" className="text-black hover:text-gray-700">
+            {/* <Link to="/about" className="text-black hover:text-gray-700">
               About
-            </Link>
+            </Link> */}
           </div>
-          <div className="ml-auto flex w-full space-x-2 sm:justify-end">
-            <Select>
-              <SelectTrigger className="w-[180px]">
+          <div className="flex flex-col sm:flex-row w-auto space-y-2 sm:space-y-0 space-x-0 sm:space-x-2 justify-start">
+            <Select onValueChange={(value) => setMoodScoreType(value as 'anthropic' | 'base')}>
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Claude 3.5 Sonnet" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="light">Claude 3.5 Sonnet</SelectItem>
-                <SelectItem value="dark">Gemini</SelectItem>
-                <SelectItem value="system">Local model</SelectItem>
+                <SelectItem value="anthropic">Claude Sonnet 3.5</SelectItem>
+                <SelectItem value="base">Base Model</SelectItem>
               </SelectContent>
             </Select>
             <Button asChild variant="outline" className="text-black hover:text-gray-700">
@@ -51,8 +53,8 @@ function App() {
           <Route path="/" element={
             <>
               <HeroHighlightDemo />
-              <Chart />
-              <PostTimeline />
+              <Chart moodScoreType={moodScoreType} />
+              <PostTimeline moodScoreType={moodScoreType} />
             </>
           } />
           <Route path="/about" element={<About />} />

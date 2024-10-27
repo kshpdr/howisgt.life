@@ -1,6 +1,8 @@
 "use client"
 
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 import {
   ChartConfig,
@@ -11,48 +13,70 @@ import {
 
 export const description = "A line chart"
 
-const chartData = [
-  { date: "2023-10-01", moodScore: 45 },
-  { date: "2023-10-02", moodScore: 67 },
-  { date: "2023-10-03", moodScore: -23 },
-  { date: "2023-10-04", moodScore: -45 },
-  { date: "2023-10-05", moodScore: -78 },
-  { date: "2023-10-06", moodScore: -90 },
-  { date: "2023-10-07", moodScore: -34 },
-  { date: "2023-10-08", moodScore: 12 },
-  { date: "2023-10-09", moodScore: 56 },
-  { date: "2023-10-10", moodScore: 89 },
-  { date: "2023-10-11", moodScore: 95 },
-  { date: "2023-10-12", moodScore: 78 },
-  { date: "2023-10-13", moodScore: 34 },
-  { date: "2023-10-14", moodScore: -12 },
-  { date: "2023-10-15", moodScore: -45 },
-  { date: "2023-10-16", moodScore: -67 },
-  { date: "2023-10-17", moodScore: -89 },
-  { date: "2023-10-18", moodScore: -95 },
-  { date: "2023-10-19", moodScore: -56 },
-  { date: "2023-10-20", moodScore: -23 },
-  { date: "2023-10-21", moodScore: 45 },
-  { date: "2023-10-22", moodScore: 78 },
-  { date: "2023-10-23", moodScore: 90 },
-  { date: "2023-10-24", moodScore: 67 },
-  { date: "2023-10-25", moodScore: 23 },
-  { date: "2023-10-26", moodScore: -12 },
-  { date: "2023-10-27", moodScore: -56 },
-  { date: "2023-10-28", moodScore: -78 },
-  { date: "2023-10-29", moodScore: -45 },
-  { date: "2023-10-30", moodScore: 12 },
-  { date: "2023-10-31", moodScore: 56 },
-]
-
 const chartConfig = {
   moodScore: {
     label: "Mood Score",
-    color:  "hsl(var(--chart-1))",
+    color: "hsl(var(--chart-1))",
   },
 } satisfies ChartConfig
 
-export function Chart() {
+type Post = {
+  created_utc: string;
+  anthropic_mood_score: number;
+  base_mood_score: number;
+};
+
+export function Chart({ moodScoreType }: { moodScoreType: 'anthropic' | 'base' }) {
+  const [chartData, setChartData] = useState<{ date: string; moodScore: number }[]>([]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        console.log(`${import.meta.env.VITE_BACKEND_URL}/posts`);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/posts`, {
+          params: {
+            start_date: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
+            end_date: new Date().toISOString().split('T')[0],
+          }
+        });
+
+        console.log(response);
+
+        const posts = response.data;
+
+        const groupedData = posts.reduce((acc: any, post: Post) => {
+          const date = new Date(post.created_utc).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+
+          if (!acc[date]) {
+            acc[date] = { totalScore: 0, count: 0 };
+          }
+          const moodScore = moodScoreType === 'anthropic' ? post.anthropic_mood_score : post.base_mood_score;
+          acc[date].totalScore += moodScore;
+          acc[date].count += 1;
+          return acc;
+        }, {});
+
+        const formattedData = Object.keys(groupedData).map(date => ({
+          date,
+          moodScore: groupedData[date].count > 0 ? groupedData[date].totalScore / groupedData[date].count : 0
+        }));
+
+        formattedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        setChartData(formattedData);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+
+    fetchPosts();
+  }, [moodScoreType]);
+
+  console.log(chartData)
   return (
     <ChartContainer config={chartConfig} className="min-h-[500px] w-full">
       <LineChart
@@ -74,17 +98,20 @@ export function Chart() {
             return date.toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
-            })}
+            })
+          }
           }
         />
-        <YAxis 
+        <YAxis
           dataKey="moodScore"
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tick={{fontSize: 20}}
+          tick={{ fontSize: 20 }}
+          domain={[-100, 100]} // Set the domain to cover the full range
+          ticks={[-100, -50, 0, 50, 100]} // Specify the constant ticks
           tickFormatter={(value) => {
-            switch(value) {
+            switch (value) {
               case -100:
                 return "😡";
               case -50:
@@ -102,13 +129,13 @@ export function Chart() {
         />
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent hideLabel />}
+          content={<ChartTooltipContent />}
         />
         <Line
           dataKey="moodScore"
           type="natural"
-          stroke="var(--color-moodScore)"
-          strokeWidth={2}
+          stroke="#B3A369"
+          strokeWidth={4}
           dot={false}
         />
       </LineChart>

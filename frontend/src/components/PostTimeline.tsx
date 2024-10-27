@@ -8,131 +8,53 @@ interface Post {
   author: string;
   created_utc: string;
   num_comments: number;
-  score: number;
+  base_mood_score: number;
+  anthropic_mood_score: number;
   selftext: string;
   title: string;
   subreddit: string;
   post_type: string;
   url: string;
   permalink: string;
-  moodScore: number;
+  anthropic_sentiment: number;
+  flair: string;
 }
 
-export function PostTimeline() {
-  // const data = [
-  //   {
-  //     date: "October 25, 2023",
-  //     posts: [
-  //       {
-  //         title: "Exploring the Campus",
-  //         previewText: "I had a great time exploring the campus today. The weather was perfect and I met some amazing people.",
-  //         moodScore: 80,
-  //         postUrl: "https://reddit.com/r/georgiatech/post1"
-  //       },
-  //       {
-  //         title: "Midterms Stress",
-  //         previewText: "Midterms are coming up and the stress is real. Need to find a good study group.",
-  //         moodScore: -40,
-  //         postUrl: "https://reddit.com/r/georgiatech/post2"
-  //       }
-  //     ]
-  //   },
-  //   {
-  //     date: "October 24, 2023",
-  //     posts: [
-  //       {
-  //         title: "Tech Fair Highlights",
-  //         previewText: "The tech fair was incredible! So many innovative projects and companies.",
-  //         moodScore: 90,
-  //         postUrl: "https://reddit.com/r/georgiatech/post3"
-  //       },
-  //       {
-  //         title: "Library Study Session",
-  //         previewText: "Spent the evening at the library. It was quiet and productive.",
-  //         moodScore: 70,
-  //         postUrl: "https://reddit.com/r/georgiatech/post4"
-  //       }
-  //     ]
-  //   },
-  //   {
-  //     date: "October 23, 2023",
-  //     posts: [
-  //       {
-  //         title: "Football Game",
-  //         previewText: "Attended the football game. The energy was amazing!",
-  //         moodScore: 100,
-  //         postUrl: "https://reddit.com/r/georgiatech/post5"
-  //       },
-  //       {
-  //         title: "Group Project Meeting",
-  //         previewText: "Met with my group for our project. We made good progress.",
-  //         moodScore: 60,
-  //         postUrl: "https://reddit.com/r/georgiatech/post6"
-  //       },
-  //       {
-  //         title: "Rainy Day",
-  //         previewText: "It rained all day, which was a bit of a downer.",
-  //         moodScore: -30,
-  //         postUrl: "https://reddit.com/r/georgiatech/post7"
-  //       }
-  //     ]
-  //   },
-  //   {
-  //     date: "October 22, 2023",
-  //     posts: [
-  //       {
-  //         title: "Weekend Hike",
-  //         previewText: "Went hiking with friends. The views were breathtaking.",
-  //         moodScore: 95,
-  //         postUrl: "https://reddit.com/r/georgiatech/post8"
-  //       },
-  //       {
-  //         title: "Cooking Class",
-  //         previewText: "Took a cooking class and learned to make pasta from scratch.",
-  //         moodScore: 85,
-  //         postUrl: "https://reddit.com/r/georgiatech/post9"
-  //       }
-  //     ]
-  //   },
-  //   {
-  //     date: "October 21, 2023",
-  //     posts: [
-  //       {
-  //         title: "Movie Night",
-  //         previewText: "Watched a movie with friends. It was a fun night.",
-  //         moodScore: 75,
-  //         postUrl: "https://reddit.com/r/georgiatech/post10"
-  //       },
-  //       {
-  //         title: "Study Marathon",
-  //         previewText: "Spent the day studying for exams. It was exhausting but necessary.",
-  //         moodScore: -50,
-  //         postUrl: "https://reddit.com/r/georgiatech/post11"
-  //       }
-  //     ]
-  //   }
-  // ];
+export function PostTimeline({ moodScoreType }: { moodScoreType: 'anthropic' | 'base' }) {
+
   const [data, setData] = useState<{ date: string; posts: Post[] }[]>([]);
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        console.log(`${import.meta.env.VITE_BACKEND_URL}/posts`);
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/posts`, {
           params: {
-            start_date: '2024-10-21',
-            end_date: '2024-10-25',
-            limit: 100
+            start_date: new Date(new Date().setDate(new Date().getDate() - 6)).toISOString().split('T')[0],
+            end_date: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0],
+            limit: 50
           }
         });
 
-        console.log(response.data)
+        const calculateWeightedSentiment = (sentiment: number, score: number, numComments: number) => {
+          const neutralWeight = 0;
+          const sentimentWeight = sentiment || neutralWeight;
+          const engagementFactor = (Math.sqrt(score + 1) + Math.sqrt(numComments + 1)) / 2; // Use square root for moderation
+          return sentimentWeight * engagementFactor;
+        };
 
-        const posts = response.data.map((post: Post) => ({
-          ...post,
-          moodScore: 0 // Temporarily override sentiment score
-        }));
+        const posts = response.data.map((post: Post) => {
+          const moodScore = moodScoreType === 'anthropic' ? post.anthropic_mood_score : post.base_mood_score;
+          const weightedSentiment = calculateWeightedSentiment(post.anthropic_sentiment, moodScore, post.num_comments);
+          const clampedScore = Math.max(-1, Math.min(1, weightedSentiment / 10)); // Clamp to [-1, 1] and scale
+          const normalizedScore = clampedScore * 100; // Scale to [-100, 100]
+          return {
+            ...post,
+            moodScore: normalizedScore
+          };
+        });
 
-        console.log("Fetched posts:", posts);
+        console.log("Fetched posts with mood scores:", posts);
 
         // Group posts by date
         const groupedData = posts.reduce((acc: any, post: Post) => {
@@ -162,7 +84,7 @@ export function PostTimeline() {
     };
 
     fetchPosts();
-  }, []);
+  }, [moodScoreType]);
 
 
   return (
@@ -176,8 +98,9 @@ export function PostTimeline() {
                 key={post.post_id}
                 title={post.title}
                 previewText={post.selftext || "No content available"}
-                moodScore={post.moodScore}
-                postUrl={post.url}
+                moodScore={moodScoreType === 'anthropic' ? post.anthropic_mood_score : post.base_mood_score}
+                postUrl={"https://reddit.com" + post.permalink}
+                flair={post.flair}
               />
             ))}
           </div>
