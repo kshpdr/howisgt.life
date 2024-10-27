@@ -1,16 +1,7 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
@@ -91,6 +82,23 @@ export function Chart() {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
+          tick={{fontSize: 20}}
+          tickFormatter={(value) => {
+            switch(value) {
+              case -100:
+                return "😡";
+              case -50:
+                return "😕";
+              case 0:
+                return "😶";
+              case 50:
+                return "😊";
+              case 100:
+                return "🤑";
+              default:
+                return value;
+            }
+          }}
         />
         <ChartTooltip
           cursor={false}

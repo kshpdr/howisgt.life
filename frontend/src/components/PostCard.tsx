@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface PostCardProps {
@@ -11,8 +10,9 @@ interface PostCardProps {
 export function PostCard({ title, previewText, moodScore, postUrl }: PostCardProps) {
   // Calculate the color based on the mood score
   const moodColor = moodScore < 0
-  ? `hsl(${(moodScore + 100) * 0.6}, 70%, 50%)` // Red to Grey
-  : `hsl(${(moodScore * 0.6) + 60}, 70%, 50%)`; // Grey to Green
+    ? `hsl(${(moodScore + 100) * 0.6}, 70%, 50%)` // Red to Grey
+    : `hsl(${(moodScore * 0.6) + 60}, 70%, 50%)`; // Grey to Green
+
   return (
     <Card
       className="w-[350px] cursor-pointer hover:shadow-lg transition-shadow p-4"
@@ -20,12 +20,19 @@ export function PostCard({ title, previewText, moodScore, postUrl }: PostCardPro
       style={{ borderColor: moodColor, borderWidth: '2px', borderStyle: 'solid' }}
     >
       <CardHeader className="flex-row justify-between items-center">
-        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+        <CardTitle className="text-lg font-semibold truncate">{title}</CardTitle>
         <p className="text-xs" style={{ color: moodColor }}>Mood Score: {moodScore}</p>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-700">{previewText}</p>
-      </CardContent>
+        <p className="text-sm text-gray-700" style={{
+          display: '-webkit-box',
+          WebkitLineClamp: 3, // Number of lines to show
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}>
+          {previewText}
+        </p>      </CardContent>
     </Card>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 import {
-  useMotionValueEvent,
+  // useMotionValueEvent,
   useScroll,
   useTransform,
   motion,
@@ -20,9 +20,10 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
   useEffect(() => {
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
+      console.log("Timeline height:", rect.height);
       setHeight(rect.height);
     }
-  }, [ref]);
+  }, [ref, data]); // Add data as a dependency to recalculate height when data changes
 
   const { scrollYProgress } = useScroll({
     target: containerRef,

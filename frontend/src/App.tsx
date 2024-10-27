@@ -1,71 +1,65 @@
-import './App.css'
-import { Chart } from './components/Chart'
-import { Button } from '@/components/ui/button'
-import { FlipWords } from "@/components/ui/flip-words";
+import './App.css';
+import { Chart } from './components/Chart';
+import { Button } from '@/components/ui/button';
 import { PostTimeline } from '@/components/PostTimeline';
 import { Icons } from "@/components/Icons";
 import { HeroHighlightDemo } from '@/components/HeroHighlightDemo';
+import { About } from '@/components/About';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function App() {
-  // Mock data for posts
-  const posts = [
-    {
-      title: "Exploring the Campus",
-      previewText: "I had a great time exploring the campus today. The weather was perfect and I met some amazing people.",
-      moodScore: 8,
-      postUrl: "https://reddit.com/r/georgiatech/post1"
-    },
-    {
-      title: "Midterms Stress",
-      previewText: "Midterms are coming up and the stress is real. Need to find a good study group.",
-      moodScore: 4,
-      postUrl: "https://reddit.com/r/georgiatech/post2"
-    },
-    {
-      title: "Tech Fair Highlights",
-      previewText: "The tech fair was incredible! So many innovative projects and companies.",
-      moodScore: 9,
-      postUrl: "https://reddit.com/r/georgiatech/post3"
-    }
-  ];
-
   return (
-    <div className="hidden h-full flex-col md:flex space-y-8">
-      <div className="sticky top-0 container flex flex-col items-start justify-between space-y-2 py-4 sm:flex-row sm:items-center sm:space-y-0 md:h-16 bg-white z-10">
-        <a href="/" className="text-2xl font-bold flex items-center text-black no-underline hover:text-gray-700">
-          <span className="mr-2">🥵</span> howisgt.life
-        </a>
-        <div className="ml-auto flex w-full space-x-2 sm:justify-end">
-          <Button asChild variant="outline" className="text-black hover:text-gray-700">
-            <a href="https://github.com/kshpdr/howisgt.life" target="_blank" rel="noopener noreferrer">
-              Source code
-              <Icons.gitHub className="h-4 w-4 mr-2" />
-            </a>
-          </Button>
+    <Router>
+      <div className="hidden h-full flex-col md:flex space-y-8">
+        <div className="sticky top-0 container flex flex-col items-start justify-between space-y-2 py-4 sm:flex-row sm:items-center sm:space-y-0 md:h-16 bg-white z-10">
+          <div className="flex items-center space-x-4">
+            <Link to="/" className="text-2xl font-bold flex items-center text-black no-underline hover:text-gray-700">
+              <span className="mr-2">🥵</span> howisgt.life
+            </Link>
+            <Link to="/about" className="text-black hover:text-gray-700">
+              About
+            </Link>
+          </div>
+          <div className="ml-auto flex w-full space-x-2 sm:justify-end">
+            <Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Claude 3.5 Sonnet" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="light">Claude 3.5 Sonnet</SelectItem>
+                <SelectItem value="dark">Gemini</SelectItem>
+                <SelectItem value="system">Local model</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button asChild variant="outline" className="text-black hover:text-gray-700">
+              <a href="https://github.com/kshpdr/howisgt.life" target="_blank" rel="noopener noreferrer">
+                Source code
+                <Icons.gitHub className="h-4 w-4 mr-2" />
+              </a>
+            </Button>
+          </div>
         </div>
+        <Routes>
+          <Route path="/" element={
+            <>
+              <HeroHighlightDemo />
+              <Chart />
+              <PostTimeline />
+            </>
+          } />
+          <Route path="/about" element={<About />} />
+        </Routes>
       </div>
-      {/* <div className="flex justify-center items-center px-4">
-        <div className="text-3xl mx-auto font-normal text-neutral-600 dark:text-neutral-400">
-          How is <span className="font-bold">Georgia Tech</span> life?
-          <FlipWords words={words} /> <br />
-        </div>
-      </div> */}
-      <HeroHighlightDemo />
-      <Chart />
-      <PostTimeline />
-      {/* <div className="space-y-4">
-        {posts.map((post, index) => (
-          <PostCard
-            key={index}
-            title={post.title}
-            previewText={post.previewText}
-            moodScore={post.moodScore}
-            postUrl={post.postUrl}
-          />
-        ))}
-      </div> */}
-    </div>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;
