@@ -3,8 +3,10 @@ import psycopg2
 from datetime import datetime
 import time
 import os
+import math
 from dotenv import load_dotenv
 from anthropic_api import analyze_anthropic_sentiment
+from base_model import analyze_base_sentiment
 
 load_dotenv()
 
@@ -25,12 +27,20 @@ def poll_reddit():
             cur = conn.cursor()
             
             insert_query = """
-            INSERT INTO posts (post_id, author, created_utc, num_comments, score, selftext, title, subreddit, post_type, url, permalink, anthropic_sentiment)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO posts (post_id, author, created_utc, num_comments, score, selftext, title, subreddit, post_type, url, permalink, anthropic_sentiment, flair, anthropic_mood_score, base_mood_score, base_sentiment)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (post_id) 
-            DO UPDATE SET 
-                anthropic_sentiment = EXCLUDED.anthropic_sentiment;
+            DO NOTHING;
             """
+
+            def calculate_weighted_sentiment(sentiment, score, num_comments):
+                neutral_weight = 0.1
+                sentiment_weight = sentiment if sentiment is not None else neutral_weight
+                engagement_factor = (math.sqrt(score + 1) + math.sqrt(num_comments + 1)) / 2
+                weighted_sentiment = sentiment_weight * engagement_factor
+                clamped_score = max(-1, min(1, weighted_sentiment / 10))
+                normalized_score = clamped_score * 100
+                return normalized_score
 
             for submission in reddit.subreddit("gatech").new(limit=1000):
                 post_type = 'text' if submission.is_self else 'link'
@@ -39,10 +49,17 @@ def poll_reddit():
                 Title: {submission.title}
                 Flair: {submission.link_flair_text or 'No flair'}
                 Text: {submission.selftext or 'No text'}
-                """    
+                """
+                score, num_comments = submission.score, submission.num_comments
                 anthropic_sentiment = analyze_anthropic_sentiment(structured_message)
-                # print(structured_message)
-                # print(anthropic_sentiment)
+                anthropic_mood_score = calculate_weighted_sentiment(
+                    anthropic_sentiment, score, num_comments
+                )
+                
+                base_sentiment = analyze_base_sentiment(submission.selftext, submission.title, submission.link_flair_text)
+                base_mood_score = calculate_weighted_sentiment(
+                    base_sentiment, score, num_comments
+                )
             
                 cur.execute(insert_query, (
                     submission.id,
@@ -56,7 +73,11 @@ def poll_reddit():
                     post_type,
                     submission.url,
                     submission.permalink,
-                    anthropic_sentiment
+                    anthropic_sentiment,
+                    submission.link_flair_text,
+                    anthropic_mood_score,
+                    base_mood_score,
+                    base_sentiment,
                 ))
 
             conn.commit()
