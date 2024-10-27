@@ -2,8 +2,11 @@ from flask import Flask, jsonify, request
 from backend.models import get_posts
 import logging
 from datetime import datetime
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+CORS(app)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,4 +34,4 @@ def posts():
         return jsonify({"error": "An error occurred while fetching posts"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
