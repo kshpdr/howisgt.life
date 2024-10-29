@@ -18,7 +18,7 @@ reddit = praw.Reddit(
 
 db_uri = os.getenv('DATABASE_URI')
 
-polling_interval = int(os.getenv('POLLING_INTERVAL', 3600)) # 86400 daily, 3600 hourly 
+polling_interval = int(os.getenv('POLLING_INTERVAL', 86400)) # 86400 daily, 3600 hourly 
 
 def poll_reddit():
     while True:
@@ -32,6 +32,8 @@ def poll_reddit():
             ON CONFLICT (post_id) 
             DO NOTHING;
             """
+            
+            check_query = "SELECT 1 FROM posts WHERE post_id = %s;"
 
             def calculate_weighted_sentiment(sentiment, score, num_comments):
                 neutral_weight = 0.1
@@ -42,7 +44,12 @@ def poll_reddit():
                 normalized_score = clamped_score * 100
                 return normalized_score
 
-            for submission in reddit.subreddit("gatech").new(limit=1000):
+            for submission in reddit.subreddit("gatech").new(limit=100):
+                cur.execute(check_query, (submission.id,))
+                if cur.fetchone():
+                    print(f"Post {submission.id} already exists in the database. Stopping polling.")
+                    break
+
                 post_type = 'text' if submission.is_self else 'link'
                 
                 structured_message = f"""
