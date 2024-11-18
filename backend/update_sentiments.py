@@ -75,4 +75,5 @@ def update_mood_scores(days, sentiment_function):
 if __name__ == '__main__':
     
     from reddit_sentiment_analysis.models.logistic_regression.logistic_regression import logistic_regression_sentiment
-    update_mood_scores(days=365, sentiment_function=logistic_regression_sentiment)
+    from reddit_sentiment_analysis.models.bert.bert import bert_sentiment
+    update_mood_scores(days=365, sentiment_function=bert_sentiment)
