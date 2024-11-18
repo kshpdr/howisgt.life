@@ -45,6 +45,7 @@ def poll_reddit():
                 return normalized_score
 
             for submission in reddit.subreddit("gatech").new(limit=100):
+                print(f"Processing submission: {submission.id} - {submission.title}")
                 cur.execute(check_query, (submission.id,))
                 if cur.fetchone():
                     print(f"Post {submission.id} already exists in the database. Stopping polling.")
