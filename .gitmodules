@@ -1,0 +1,3 @@
+[submodule "reddit_sentiment_analysis"]
+	path = reddit_sentiment_analysis
+	url = https://github.com/kshpdr/reddit_sentiment_analysis.git
