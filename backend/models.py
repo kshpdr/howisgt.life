@@ -10,7 +10,8 @@ def get_posts(start_date=None, end_date=None, limit=None):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    query = 'SELECT post_id, author, created_utc, num_comments, score, selftext, title, subreddit, post_type, url, permalink, anthropic_sentiment, flair, anthropic_mood_score, base_mood_score, base_sentiment FROM posts WHERE 1=1'
+    # Fetch all columns dynamically
+    query = 'SELECT * FROM posts WHERE 1=1'
     params = []
 
     if start_date:
@@ -27,30 +28,17 @@ def get_posts(start_date=None, end_date=None, limit=None):
 
     cur.execute(query, params)
     rows = cur.fetchall()
+
+    # Fetch column names
+    colnames = [desc[0] for desc in cur.description]
+
     cur.close()
     conn.close()
 
-    # Convert rows to list of dictionaries
+    # Convert rows to list of dictionaries using column names
     posts = []
     for row in rows:
-        post = {
-            'post_id': row[0],
-            'author': row[1],
-            'created_utc': row[2],
-            'num_comments': row[3],
-            'score': row[4],
-            'selftext': row[5],
-            'title': row[6],
-            'subreddit': row[7],
-            'post_type': row[8],
-            'url': row[9],
-            'permalink': row[10],
-            'anthropic_sentiment': row[11],
-            'flair': row[12],
-            'anthropic_mood_score': row[13],
-            'base_mood_score': row[14],
-            'base_sentiment': row[15],
-        }
+        post = {colname: value for colname, value in zip(colnames, row)}
         posts.append(post)
 
     return posts
