@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 
 function App() {
-  const [moodScoreType, setMoodScoreType] = useState<'anthropic' | 'base'>('anthropic');
+  const [moodScoreType, setMoodScoreType] = useState<'anthropic' | 'base' | 'logistic_regression' | 'bert'>('anthropic');
 
   return (
     <Router>
@@ -32,13 +32,15 @@ function App() {
             </Link> */}
           </div>
           <div className="flex flex-col sm:flex-row w-auto space-y-2 sm:space-y-0 space-x-0 sm:space-x-2 justify-start">
-            <Select onValueChange={(value) => setMoodScoreType(value as 'anthropic' | 'base')}>
+            <Select onValueChange={(value) => setMoodScoreType(value as 'anthropic' | 'base' | 'logistic_regression' | 'bert' )}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Claude 3.5 Sonnet" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="anthropic">Claude Sonnet 3.5</SelectItem>
                 <SelectItem value="base">Base Model</SelectItem>
+                <SelectItem value="logistic_regression">Logistic Regression</SelectItem>
+                <SelectItem value="bert">Finetuned BERT</SelectItem>
               </SelectContent>
             </Select>
             <Button asChild variant="outline" className="text-black hover:text-gray-700">
