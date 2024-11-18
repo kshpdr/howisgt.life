@@ -3,10 +3,14 @@ import psycopg2
 from datetime import datetime
 import time
 import os
+import sys
 import math
 from dotenv import load_dotenv
 from anthropic_api import analyze_anthropic_sentiment
 from base_model import analyze_base_sentiment
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from reddit_sentiment_analysis.models.logistic_regression.logistic_regression import logistic_regression_sentiment
 
 load_dotenv()
 
@@ -27,8 +31,8 @@ def poll_reddit():
             cur = conn.cursor()
             
             insert_query = """
-            INSERT INTO posts (post_id, author, created_utc, num_comments, score, selftext, title, subreddit, post_type, url, permalink, anthropic_sentiment, flair, anthropic_mood_score, base_mood_score, base_sentiment)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO posts (post_id, author, created_utc, num_comments, score, selftext, title, subreddit, post_type, url, permalink, anthropic_sentiment, flair, anthropic_mood_score, base_mood_score, base_sentiment, logistic_regression_sentiment, logistic_regression_mood_score)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (post_id) 
             DO NOTHING;
             """
@@ -68,6 +72,12 @@ def poll_reddit():
                 base_mood_score = calculate_weighted_sentiment(
                     base_sentiment, score, num_comments
                 )
+                
+                logistic_regression_structured_message = f"{submission.title} | Selftext: {submission.selftext or 'No text'} | Flair: {submission.link_flair_text or 'No flair'}"
+                log_regression_sentiment = logistic_regression_sentiment(logistic_regression_structured_message)
+                log_regression_mood_score = calculate_weighted_sentiment(
+                    log_regression_sentiment, score, num_comments
+                )
             
                 cur.execute(insert_query, (
                     submission.id,
@@ -86,6 +96,8 @@ def poll_reddit():
                     anthropic_mood_score,
                     base_mood_score,
                     base_sentiment,
+                    log_regression_sentiment,
+                    log_regression_mood_score,
                 ))
 
             conn.commit()
