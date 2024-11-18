@@ -26,21 +26,19 @@ type Post = {
   base_mood_score: number;
 };
 
-export function Chart({ moodScoreType }: { moodScoreType: 'anthropic' | 'base' }) {
+export function Chart({ moodScoreType }: { moodScoreType: 'anthropic' | 'base' | 'logistic_regression' | 'bert'}) {
   const [chartData, setChartData] = useState<{ date: string; moodScore: number }[]>([]);
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        console.log(`${import.meta.env.VITE_BACKEND_URL}/posts`);
+        // console.log(`${import.meta.env.VITE_BACKEND_URL}/posts`);
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/posts`, {
           params: {
             start_date: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
             end_date: new Date().toISOString().split('T')[0],
           }
         });
-
-        console.log(response);
 
         const posts = response.data;
 
@@ -54,7 +52,11 @@ export function Chart({ moodScoreType }: { moodScoreType: 'anthropic' | 'base' }
           if (!acc[date]) {
             acc[date] = { totalScore: 0, count: 0 };
           }
-          const moodScore = moodScoreType === 'anthropic' ? post.anthropic_mood_score : post.base_mood_score;
+          const moodScoreKey = `${moodScoreType}_mood_score`;
+          const moodScore = post[moodScoreKey];
+          console.log(moodScoreKey)
+          console.log(moodScore)
+          
           acc[date].totalScore += moodScore;
           acc[date].count += 1;
           return acc;
@@ -76,7 +78,6 @@ export function Chart({ moodScoreType }: { moodScoreType: 'anthropic' | 'base' }
     fetchPosts();
   }, [moodScoreType]);
 
-  console.log(chartData)
   return (
     <ChartContainer config={chartConfig} className="min-h-[500px] w-full">
       <LineChart

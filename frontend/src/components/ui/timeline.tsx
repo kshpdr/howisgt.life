@@ -20,7 +20,7 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
   useEffect(() => {
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
-      console.log("Timeline height:", rect.height);
+      // console.log("Timeline height:", rect.height);
       setHeight(rect.height);
     }
   }, [ref, data]); // Add data as a dependency to recalculate height when data changes

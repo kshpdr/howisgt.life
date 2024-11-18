@@ -20,14 +20,14 @@ interface Post {
   flair: string;
 }
 
-export function PostTimeline({ moodScoreType }: { moodScoreType: 'anthropic' | 'base' }) {
+export function PostTimeline({ moodScoreType }: { moodScoreType: 'anthropic' | 'base' | 'logistic_regression' | 'bert'}) {
 
   const [data, setData] = useState<{ date: string; posts: Post[] }[]>([]);
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        console.log(`${import.meta.env.VITE_BACKEND_URL}/posts`);
+        // console.log(`${import.meta.env.VITE_BACKEND_URL}/posts`);
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/posts`, {
           params: {
             start_date: new Date(new Date().setDate(new Date().getDate() - 6)).toISOString().split('T')[0],
@@ -44,7 +44,9 @@ export function PostTimeline({ moodScoreType }: { moodScoreType: 'anthropic' | '
         };
 
         const posts = response.data.map((post: Post) => {
-          const moodScore = moodScoreType === 'anthropic' ? post.anthropic_mood_score : post.base_mood_score;
+          const moodScoreKey = `${moodScoreType}_mood_score`;
+          const moodScore = post[moodScoreKey];
+
           const weightedSentiment = calculateWeightedSentiment(post.anthropic_sentiment, moodScore, post.num_comments);
           const clampedScore = Math.max(-1, Math.min(1, weightedSentiment / 10)); // Clamp to [-1, 1] and scale
           const normalizedScore = clampedScore * 100; // Scale to [-100, 100]
